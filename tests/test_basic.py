@@ -1,10 +1,4 @@
 import sys
-from pathlib import Path
-
-# Ensure the project root is on PYTHONPATH
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-
 import pandas as pd
 from pybasics.main import summarize
 
