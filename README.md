@@ -20,3 +20,16 @@ Simple CLI tool that summarizes a CSV.
 
 Example:
    python main.py data/titanic.csv --out summary.json
+
+Example
+-------
+$ python main.py day1.csv --out summary.json
+
+Produces `summary.json` like:
+{
+  "n_rows": 891,
+  "n_cols": 12,
+  "columns": ["PassengerId","Survived", ...],
+  "dtypes": {"PassengerId":"int64", "Survived":"int64", ...},
+  "missing_counts": {"Age":177, "Cabin":687, ...}
+}
