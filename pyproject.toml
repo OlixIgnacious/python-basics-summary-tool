@@ -3,21 +3,18 @@ name = "python-basics-summary-tool"
 version = "0.1.0"
 description = "CSV summary tool"
 authors = [
-    { name = "Ashwini Sharma" }
+  { name = "Ashwini Sharma" }
 ]
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = [
-    "pandas"
-]
+dependencies = ["pandas"]
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-package-dir = { "" = "." }
+package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["pybasics"]
+where = ["src"]
