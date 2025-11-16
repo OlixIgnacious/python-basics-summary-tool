@@ -1,62 +1,54 @@
-import pandas as pd
-import json
 import sys
+import json
 import argparse
 from pathlib import Path
+import pandas as pd
 
-def load_csv(path):
-    """Load a CSV file into a pandas DataFrame.
+def load_csv(path: Path, encoding: str = "utf-8", nrows: int | None = None) -> pd.DataFrame:
+    read_args = {"encoding": encoding}
+    if nrows:
+        return pd.read_csv(path, nrows=nrows, **read_args)
+    return pd.read_csv(path, **read_args)
 
-    Args:
-        path (str): The file path to the CSV file.
-
-    Returns:
-        pd.DataFrame: The loaded DataFrame.
-    """
-    return pd.read_csv(path)
-
-def summarize(df) -> dict:
-    """Generate summary statistics for a DataFrame.
-
-    Args:
-        df (pd.DataFrame): The DataFrame to summarize.
-
-    Returns:
-        dict: A dictionary containing summary statistics.
-    """
-    summary = {
-        'num_rows': df.shape[0],
-        'num_columns': df.shape[1],
-        'column_names': df.columns.tolist(),
-        'data_types': df.dtypes.astype('str').to_dict(),
-        'missing_values': df.isnull().sum().to_dict(),
-        'descriptive_stats': df.describe().to_dict()
+def summarize(df: pd.DataFrame) -> dict:
+    """Return concise summary keys used by the project."""
+    return {
+        "n_rows": int(df.shape[0]),
+        "n_cols": int(df.shape[1]),
+        "columns": list(df.columns.astype(str)),
+        "dtypes": {str(col): str(dtype) for col, dtype in zip(df.columns, df.dtypes)},
+        "missing_counts": {str(col): int(df[col].isna().sum()) for col in df.columns},
     }
-    return summary
-    
-def save_report(summary, path):
-    with open(path, 'w') as f:
-        json.dump(summary, f, indent=4)
 
-def main(argv=None):
+def save_report(summary: dict, out_path: Path):
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2, ensure_ascii=False)
+
+def run_cli(argv=None):
     parser = argparse.ArgumentParser(description="CSV summary tool")
     parser.add_argument("csv_path", help="Path to CSV file to summarize")
-    parser.add_argument("--out", default="summary.json", help="Output summary file (JSON)")
+    parser.add_argument("--out", "-o", default="summary.json", help="Output summary file (JSON)")
+    parser.add_argument("--encoding", default="utf-8", help="CSV file encoding")
+    parser.add_argument("--max-rows", type=int, default=None, help="Limit number of rows read (for large files)")
     args = parser.parse_args(argv)
 
-    path = Path(args.csv_path)
-    if not path.exists():
-        print(f"ERROR: CSV file not found: {path}", file=sys.stderr)
+    csv_path = Path(args.csv_path)
+    if not csv_path.exists():
+        print(f"ERROR: CSV file not found: {csv_path}", file=sys.stderr)
         sys.exit(2)
 
     try:
-        df = load_csv(path)
+        df = load_csv(csv_path, encoding=args.encoding, nrows=args.max_rows)
         summary = summarize(df)
+        # print to stdout for quick verification and CI logs
+        print(json.dumps(summary, indent=2))
         save_report(summary, Path(args.out))
-        print(f"Saved summary to {args.out}")     
+        print(f"Saved summary to {args.out}")
+        sys.exit(0)
     except Exception as e:
         print("ERROR:", e, file=sys.stderr)
         sys.exit(1)
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    run_cli()
